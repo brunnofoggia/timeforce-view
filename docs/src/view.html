@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="dark">
+
+<head>
+    <title>
+        view.js
+    </title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" media="all" href="/public/stylesheets/normalize.css" />
+    <link rel="stylesheet" media="all" href="../docco.css" />
+    <link rel="stylesheet" media="all" href="../styles/color-modes.css" />
+    <link rel="stylesheet" media="all" href="../styles/design.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="page">
+
+            <div class="header">
+                <small class="color-modes">
+                    <a href="#" class="color-mode dark"
+                        onclick="event.preventDefault(); document.getElementsByTagName('html')[0].classList.add('dark'); document.getElementsByTagName('html')[0].classList.remove('light')">&nbsp;</a>
+                    &nbsp;&nbsp;&nbsp;
+                    <a href="#" class="color-mode light"
+                        onclick="event.preventDefault(); document.getElementsByTagName('html')[0].classList.remove('dark'); document.getElementsByTagName('html')[0].classList.add('light')">&nbsp;</a>
+                </small>
+                
+                                            <h1>
+                                                view.js
+                                            </h1>
+                                            
+
+                                                
+            </div>
+
+            
+                
+                    
+                        
+                            <div class='highlight'><pre><span class="hljs-keyword">import</span> _ <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;lodash&#x27;</span>;
+<span class="hljs-keyword">import</span> timeforce <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;timeforce&#x27;</span>;
+<span class="hljs-keyword">import</span> { extend } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;timeforce/dist/helpers.min.js&#x27;</span>;</pre></div>
+                                
+                                    
+                
+                    <h2 id="timeforceview">timeforce.View</h2>
+
+                        
+                                    
+                
+                    <p>timeforce Views are almost more convention than they are actual code. A View
+is simply a JavaScript object that represents a logical chunk of UI in the
+DOM. This might be a single item, an entire list, a sidebar or panel, or
+even the surrounding frame which wraps your whole app. Defining a chunk of
+UI as a <strong>View</strong> allows you to define your DOM events declaratively, without
+having to worry about render order … and makes it easy for the view to
+react to specific changes in the state of your models.</p>
+
+                        
+                                    
+                
+                    <p>Creating a timeforce.View creates its initial element outside of the DOM,
+if an existing element is not provided…</p>
+
+                        
+                            <div class='highlight'><pre><span class="hljs-keyword">var</span> <span class="hljs-title class_">View</span> = <span class="hljs-keyword">function</span> (<span class="hljs-params">options</span>) {
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">cid</span> = _.<span class="hljs-title function_">uniqueId</span>(<span class="hljs-string">&#x27;view&#x27;</span>);
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">preinitialize</span>.<span class="hljs-title function_">apply</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-variable language_">arguments</span>);
+    _.<span class="hljs-title function_">extend</span>(<span class="hljs-variable language_">this</span>, _.<span class="hljs-title function_">pick</span>(options, viewOptions));
+    <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">_ensureElement</span>();
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">initialize</span>.<span class="hljs-title function_">apply</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-variable language_">arguments</span>);
+};</pre></div>
+                                
+                                    
+                
+                    <p>Cached regex to split keys for <code>delegate</code>.</p>
+
+                        
+                            <div class='highlight'><pre><span class="hljs-keyword">var</span> delegateEventSplitter = <span class="hljs-regexp">/^(\S+)\s*(.*)$/</span>;</pre></div>
+                                
+                                    
+                
+                    <p>List of view options to be set as properties.</p>
+
+                        
+                            <div class='highlight'><pre><span class="hljs-keyword">var</span> viewOptions = [<span class="hljs-string">&#x27;model&#x27;</span>, <span class="hljs-string">&#x27;collection&#x27;</span>, <span class="hljs-string">&#x27;el&#x27;</span>, <span class="hljs-string">&#x27;id&#x27;</span>, <span class="hljs-string">&#x27;attributes&#x27;</span>, <span class="hljs-string">&#x27;className&#x27;</span>, <span class="hljs-string">&#x27;tagName&#x27;</span>, <span class="hljs-string">&#x27;events&#x27;</span>];</pre></div>
+                                
+                                    
+                
+                    <p>Set up all inheritable <strong>timeforce.View</strong> properties and methods.</p>
+
+                        
+                            <div class='highlight'><pre>_.<span class="hljs-title function_">extend</span>(<span class="hljs-title class_">View</span>.<span class="hljs-property"><span class="hljs-keyword">prototype</span></span>, timeforce.<span class="hljs-property">Events</span>, {</pre></div>
+                                
+                                    
+                
+                    <p>global</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_global</span>: timeforce,</pre></div>
+                                
+                                    
+                
+                    <p>The default <code>tagName</code> of a View’s element is <code>&quot;div&quot;</code>.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">tagName</span>: <span class="hljs-string">&#x27;div&#x27;</span>,</pre></div>
+                                
+                                    
+                
+                    <p>jQuery delegate for element lookup, scoped to DOM elements within the
+current view. This should be preferred to global lookups where possible.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">$</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">selector</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">find</span>(selector);
+    },</pre></div>
+                                
+                                    
+                
+                    <p>preinitialize is an empty function by default. You can override it with a function
+or object.  preinitialize will run before any instantiation logic is run in the View</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">preinitialize</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) { },</pre></div>
+                                
+                                    
+                
+                    <p>Initialize is an empty function by default. Override it with your own
+initialization logic.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">initialize</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) { },</pre></div>
+                                
+                                    
+                
+                    <p><strong>render</strong> is the core function that your view should override, in order
+to populate its element (<code>this.el</code>), with the appropriate HTML. The
+convention is for <strong>render</strong> to always return <code>this</code>.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">render</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Remove this view by taking the element out of the DOM, and removing any
+applicable timeforce.Events listeners.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">remove</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">_removeElement</span>();
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">stopListening</span>();
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Remove this view’s element from the document and all event listeners
+attached to it. Exposed for subclasses using an alternative DOM
+manipulation API.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_removeElement</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">remove</span>();
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Change the view’s element (<code>this.el</code> property) and re-delegate the
+view’s events on the new element.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">setElement</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">element</span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">undelegateEvents</span>();
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">_setElement</span>(element);
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">delegateEvents</span>();
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Creates the <code>this.el</code> and <code>this.$el</code> references for this view using the
+given <code>el</code>. <code>el</code> can be a CSS selector or an HTML string, a jQuery
+context or an element. Subclasses can override this to utilize an
+alternative DOM manipulation API and are only required to set the
+<code>this.el</code> property.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_setElement</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">el</span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span> = el <span class="hljs-keyword">instanceof</span> <span class="hljs-variable language_">this</span>.<span class="hljs-property">_global</span>.<span class="hljs-property">$</span> ? el : timeforce.$(el);
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">el</span> = <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>[<span class="hljs-number">0</span>];
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Set callbacks, where <code>this.events</code> is a hash of</p>
+<p><em>{“event selector”: “callback”}</em></p>
+<pre><code>{
+  <span class="hljs-string">&#x27;mousedown .title&#x27;</span>:  <span class="hljs-string">&#x27;edit&#x27;</span>,
+  <span class="hljs-string">&#x27;click .button&#x27;</span>:     <span class="hljs-string">&#x27;save&#x27;</span>,
+  <span class="hljs-string">&#x27;click .open&#x27;</span>:       <span class="hljs-keyword">function</span>(<span class="hljs-params">e</span>) { ... }
+}
+</code></pre>
+<p>pairs. Callbacks will be bound to the view, with <code>this</code> set properly.
+Uses event delegation for efficiency.
+Omitting the selector binds the event to <code>this.el</code>.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">delegateEvents</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">events</span>) {
+        events || (events = _.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;events&#x27;</span>));
+        <span class="hljs-keyword">if</span> (!events) <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+        <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">undelegateEvents</span>();
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> key <span class="hljs-keyword">in</span> events) {
+            <span class="hljs-keyword">var</span> method = events[key];
+            <span class="hljs-keyword">if</span> (!_.<span class="hljs-title function_">isFunction</span>(method)) method = <span class="hljs-variable language_">this</span>[method];
+            <span class="hljs-keyword">if</span> (!method) <span class="hljs-keyword">continue</span>;
+            <span class="hljs-keyword">var</span> match = key.<span class="hljs-title function_">match</span>(delegateEventSplitter);
+            <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">delegate</span>(match[<span class="hljs-number">1</span>], match[<span class="hljs-number">2</span>], method.<span class="hljs-title function_">bind</span>(<span class="hljs-variable language_">this</span>));
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Add a single event listener to the view’s element (or a child element
+using <code>selector</code>). This only works for delegate-able events: not <code>focus</code>,
+<code>blur</code>, and not <code>change</code>, <code>submit</code>, and <code>reset</code> in Internet Explorer.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">delegate</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">eventName, selector, listener</span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">on</span>(eventName + <span class="hljs-string">&#x27;.delegateEvents&#x27;</span> + <span class="hljs-variable language_">this</span>.<span class="hljs-property">cid</span>, selector, listener);
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Clears all callbacks previously bound to the view by <code>delegateEvents</code>.
+You usually don’t need to use this, but may wish to if you have multiple
+timeforce views attached to the same DOM element.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">undelegateEvents</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>) <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">off</span>(<span class="hljs-string">&#x27;.delegateEvents&#x27;</span> + <span class="hljs-variable language_">this</span>.<span class="hljs-property">cid</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>A finer-grained <code>undelegateEvents</code> for removing a single delegated event.
+<code>selector</code> and <code>listener</code> are both optional.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">undelegate</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">eventName, selector, listener</span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">off</span>(eventName + <span class="hljs-string">&#x27;.delegateEvents&#x27;</span> + <span class="hljs-variable language_">this</span>.<span class="hljs-property">cid</span>, selector, listener);
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>;
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Produces a DOM element to be assigned to your view. Exposed for
+subclasses using an alternative DOM manipulation API.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_createElement</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">tagName</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">createElement</span>(tagName);
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Ensure that the View has a DOM element to render into.
+If <code>this.el</code> is a string, pass it through <code>$()</code>, take the first
+matching element, and re-assign it to <code>el</code>. Otherwise, create
+an element from the <code>id</code>, <code>className</code> and <code>tagName</code> properties.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_ensureElement</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) {
+        <span class="hljs-keyword">if</span> (!<span class="hljs-variable language_">this</span>.<span class="hljs-property">el</span>) {
+            <span class="hljs-keyword">var</span> attrs = _.<span class="hljs-title function_">extend</span>({}, _.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;attributes&#x27;</span>));
+            <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">this</span>.<span class="hljs-property">id</span>) attrs.<span class="hljs-property">id</span> = _.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;id&#x27;</span>);
+            <span class="hljs-keyword">if</span> (<span class="hljs-variable language_">this</span>.<span class="hljs-property">className</span>) attrs[<span class="hljs-string">&#x27;class&#x27;</span>] = _.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;className&#x27;</span>);
+            <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">setElement</span>(<span class="hljs-variable language_">this</span>.<span class="hljs-title function_">_createElement</span>(_.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;tagName&#x27;</span>)));
+            <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">_setAttributes</span>(attrs);
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-variable language_">this</span>.<span class="hljs-title function_">setElement</span>(_.<span class="hljs-title function_">result</span>(<span class="hljs-variable language_">this</span>, <span class="hljs-string">&#x27;el&#x27;</span>));
+        }
+    },</pre></div>
+                                
+                                    
+                
+                    <p>Set attributes from a hash on this view’s element.  Exposed for
+subclasses using an alternative DOM manipulation API.</p>
+
+                        
+                            <div class='highlight'><pre>    <span class="hljs-attr">_setAttributes</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">attributes</span>) {
+        <span class="hljs-variable language_">this</span>.<span class="hljs-property">$el</span>.<span class="hljs-title function_">attr</span>(attributes);
+    }
+
+});
+
+<span class="hljs-title class_">View</span>.<span class="hljs-property">extend</span> = extend;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-title class_">View</span>;</pre></div>
+                                
+                                    
+                                        <div class="fleur">h</div>
+        </div>
+    </div>
+</body>
+
+</html>
